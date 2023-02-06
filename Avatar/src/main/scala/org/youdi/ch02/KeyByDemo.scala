@@ -13,7 +13,7 @@ object KeyByDemo {
         User(arr(0).toLong, arr(1), arr(2))
       }
     ).keyBy(_.address)
-      
+
 
     env.execute("keyby demo")
   }
