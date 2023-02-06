@@ -55,7 +55,7 @@ object KafkaDemo {
 
     val stream: DataStream[String] = env.fromSource(source1, strategy, " ").setParallelism(2)
 
-
+    stream.print()
 
     env.execute("kafka source")
 
