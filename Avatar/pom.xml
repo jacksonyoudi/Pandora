@@ -138,6 +138,20 @@
 
 
 
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>8.0.21</version>
+        </dependency>
+
+
+        <!-- 应用redisSink功能所需要的依赖 -->
+        <dependency>
+            <groupId>org.apache.bahir</groupId>
+            <artifactId>flink-connector-redis_2.12</artifactId>
+            <version>1.1-SNAPSHOT</version>
+        </dependency>
+
 
 
         <dependency>

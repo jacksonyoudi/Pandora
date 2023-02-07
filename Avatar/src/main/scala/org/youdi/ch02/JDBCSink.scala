@@ -1,5 +1,6 @@
 package org.youdi.ch02
 
+import com.mysql.cj.jdbc.MysqlXADataSource
 import org.apache.flink.configuration.Configuration
 import org.apache.flink.connector.jdbc.{JdbcConnectionOptions, JdbcExactlyOnceOptions, JdbcExecutionOptions, JdbcSink, JdbcStatementBuilder}
 import org.apache.flink.streaming.api.CheckpointingMode
@@ -8,6 +9,7 @@ import org.apache.flink.streaming.api.scala.{DataStream, StreamExecutionEnvironm
 import org.apache.flink.util.function.SerializableSupplier
 
 import java.sql.PreparedStatement
+import javax.sql.XADataSource
 
 object JDBCSink {
   def main(args: Array[String]): Unit = {
@@ -42,7 +44,7 @@ object JDBCSink {
     ds.addSink(sink)
 
 
-    JdbcSink.exactlyOnceSink(
+    val sinkFunction: SinkFunction[String] = JdbcSink.exactlyOnceSink(
       "insert into t_eventlog values (?)",
       new JdbcStatementBuilder[String]() {
         // 有异常抛出
@@ -58,10 +60,17 @@ object JDBCSink {
         // // mysql不支持同一个连接上存在并行的多个事务，必须把该参数设置为true
         .withTransactionPerConnection(true)
         .build(),
-      new SerializableSupplier()
+      new SerializableSupplier[XADataSource]() {
+        override def get(): XADataSource = {
+          val source: MysqlXADataSource = new MysqlXADataSource
+          source.setURL("jdbc:mysql://doit01:3306/abc?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=UTF-8")
+          source.setUser("root")
+          source.setPassword("123")
+          source
+        }
+      }
     )
-
-
+    ds.addSink(sinkFunction)
     env.execute(this.getClass.getName)
   }
 }
