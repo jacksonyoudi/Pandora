@@ -129,6 +129,12 @@
         </dependency>
 
 
+        <!-- 应用jdbcSink功能所需要的依赖 -->
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-connector-jdbc_2.12</artifactId>
+            <version>${flink.version}</version>
+        </dependency>
 
 
 
