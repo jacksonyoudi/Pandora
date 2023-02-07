@@ -145,13 +145,12 @@
         </dependency>
 
 
-        <!-- 应用redisSink功能所需要的依赖 -->
+        <!-- https://mvnrepository.com/artifact/org.apache.bahir/flink-connector-redis -->
         <dependency>
             <groupId>org.apache.bahir</groupId>
             <artifactId>flink-connector-redis_2.12</artifactId>
-            <version>1.1-SNAPSHOT</version>
+            <version>1.1.0</version>
         </dependency>
-
 
 
         <dependency>

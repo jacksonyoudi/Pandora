@@ -7,6 +7,10 @@ import org.apache.flink.connector.kafka.sink.{KafkaRecordSerializationSchema, Ka
 import org.apache.flink.streaming.api.CheckpointingMode
 import org.apache.flink.streaming.api.scala._
 
+
+/**
+ * kafkaSink 是能结合 Flink 的 Checkpoint 机制,来支持端到端精确一次语义的 ; (底层,当然是利用了 kafka producer 的事务机制
+ */
 object KafkaSinkOperator {
   def main(args: Array[String]): Unit = {
     val configuration = new Configuration()
