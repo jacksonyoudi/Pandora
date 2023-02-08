@@ -2,7 +2,8 @@ package org.youdi.ch03
 
 import org.apache.flink.configuration.Configuration
 import org.apache.flink.streaming.api.CheckpointingMode
-import org.apache.flink.streaming.api.scala.{DataStream, StreamExecutionEnvironment}
+import org.apache.flink.streaming.api.scala._
+
 
 object Demo {
   def main(args: Array[String]): Unit = {
