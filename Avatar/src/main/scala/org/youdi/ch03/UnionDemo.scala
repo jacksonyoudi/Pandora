@@ -11,6 +11,15 @@ import org.apache.flink.util.Collector
 import java.lang
 
 
+/**
+ * join流需要在窗口中进行关联后的逻辑计算
+ * stream.join(otherStream)
+ * .where([keyselect])
+ * .equalTo(keyselector)
+ * .window(windowAssigner)
+ * .apply(JoinFunction)
+ */
+
 object UnionDemo {
   def main(args: Array[String]): Unit = {
     val cfg: Configuration = new Configuration
