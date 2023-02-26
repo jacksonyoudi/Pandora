@@ -37,8 +37,8 @@ object TimeDemo {
 
     ss.window(TumblingProcessingTimeWindows.of(Time.seconds(4)))
 
-
-
+//    ss.partitionCustom()
+    ss.forward
     // 构造 watermarker的生成策略 算法策略，以及事件的抽取方法
 
 
