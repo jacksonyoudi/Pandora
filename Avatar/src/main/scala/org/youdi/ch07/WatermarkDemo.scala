@@ -3,8 +3,10 @@ package org.youdi.ch07
 import org.apache.flink.api.common.eventtime.{SerializableTimestampAssigner, WatermarkStrategy}
 import org.apache.flink.configuration.Configuration
 import org.apache.flink.streaming.api.CheckpointingMode
+import org.apache.flink.streaming.api.functions.ProcessFunction
 import org.apache.flink.streaming.api.scala._
 import org.apache.flink.streaming.api.watermark.Watermark
+import org.apache.flink.util.Collector
 
 import java.time.Duration
 
@@ -38,19 +40,30 @@ object WatermarkDemo {
     //    ds.assignTimestampsAndWatermarks(watermarkerStrategy)
 
 
-    ds.map(_.toUpperCase)
-      .assignTimestampsAndWatermarks(
-        WatermarkStrategy
-          .forBoundedOutOfOrderness(Duration.ofMillis(100))
-          .withTimestampAssigner(
-            new SerializableTimestampAssigner[String]() {
-              override def extractTimestamp(element: String, recordTimestamp: Long) =
-                element.toLong
-            }
-          )
+    //    ds.map(_.toUpperCase)
+    //      .assignTimestampsAndWatermarks(
+    //        WatermarkStrategy
+    //          .forBoundedOutOfOrderness(Duration.ofMillis(100))
+    //          .withTimestampAssigner(
+    //            new SerializableTimestampAssigner[String]() {
+    //              override def extractTimestamp(element: String, recordTimestamp: Long) =
+    //                element.toLong
+    //            }
+    //          )
+    //
+    //      )
 
-      )
 
+
+    ds.process(
+      new ProcessFunction[String, String]() {
+        override def processElement(value: String, ctx: ProcessFunction[String, String]#Context, out: Collector[String]) = {
+          val l: Long = ctx.timerService().currentWatermark()
+          val l1: Long = ctx.timerService().currentProcessingTime()
+          out.collect(value)
+        }
+      }
+    )
 
     env.execute(this.getClass.getName)
   }
