@@ -1,6 +1,7 @@
 package org.youdi.ch07
 
 import org.apache.flink.api.common.functions.{MapFunction, RichMapFunction}
+import org.apache.flink.api.common.typeinfo.TypeInformation
 import org.apache.flink.runtime.io.network.api.writer.ChannelSelector
 import org.apache.flink.streaming.api.checkpoint.ListCheckpointed
 import org.apache.flink.streaming.api.functions.sink.TwoPhaseCommitSinkFunction
@@ -12,6 +13,7 @@ import org.apache.flink.streaming.api.windowing.assigners.SlidingEventTimeWindow
 import org.apache.flink.streaming.api.windowing.evictors.Evictor
 import org.apache.flink.streaming.api.windowing.triggers.Trigger
 import org.apache.flink.streaming.runtime.partitioner.{ForwardPartitioner, StreamPartitioner}
+import org.apache.flink.types.Row
 
 
 /**
@@ -48,5 +50,9 @@ object Demo {
     InternalTimer
     InternalTimerServiceImpl
     SlidingEventTimeWindows
+    Row
+    TypeInformation
   }
 }
+
+
