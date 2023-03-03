@@ -8,7 +8,7 @@ import org.apache.flink.streaming.api.functions.ProcessFunction
 import org.apache.flink.streaming.api.scala._
 import org.apache.flink.util.Collector
 
-object ProcessFunctionD {
+object   ProcessFunctionD {
   def main(args: Array[String]): Unit = {
     val cfg: Configuration = new Configuration
     cfg.setInteger("rest.port", 9998)
