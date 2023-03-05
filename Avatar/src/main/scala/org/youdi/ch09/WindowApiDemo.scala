@@ -4,17 +4,16 @@ import org.apache.flink.api.common.eventtime.{SerializableTimestampAssigner, Wat
 import org.apache.flink.api.common.functions.AggregateFunction
 import org.apache.flink.configuration.Configuration
 import org.apache.flink.streaming.api.CheckpointingMode
-import org.apache.flink.streaming.api.functions.ProcessFunction
 import org.apache.flink.streaming.api.scala.{DataStream, StreamExecutionEnvironment}
 import org.apache.flink.streaming.api.scala._
 import org.apache.flink.streaming.api.scala.function.ProcessWindowFunction
 import org.apache.flink.streaming.api.windowing.assigners.SlidingEventTimeWindows
 import org.apache.flink.streaming.api.windowing.time.Time
 import org.apache.flink.streaming.api.windowing.windows.TimeWindow
+import org.apache.flink.util.Collector
 
-import java.sql.Connection
 import java.time.Duration
-import scala.collection.mutable.HashMap
+import scala.collection.mutable.{PriorityQueue, HashMap}
 
 
 object WindowApiDemo {
@@ -111,13 +110,40 @@ object WindowApiDemo {
       .window(
         SlidingEventTimeWindows.of(Time.seconds(30), Time.seconds(10))
       )
-//      .process(
-//        // IN, OUT, KEY, W
-////        new ProcessWindowFunction[]() {
-////
-////        }
-//      )
+      .process(
+        // IN, OUT, KEY, W
+        new ProcessWindowFunction[EventLog, (String, Double, Long), String, TimeWindow]() {
+          override def process(key: String, context: Context, elements: Iterable[EventLog], out: Collector[(String, Double, Long)]): Unit = {
+            val map: HashMap[String, (Double, Long)] = new HashMap[String, (Double, Long)]()
 
+            for (elem <- elements) {
+              val page: String = elem.page
+              val t: (Double, Long) = map.getOrElse(page, (0.toDouble, 0L))
+              map.put(page, (t._1 + elem.duration, t._2 + 1L))
+            }
+
+
+            def max_duration(x: (String, Double, Long)) = x._2 / x._3.toDouble;
+
+            //  函数柯里化
+            val queue: PriorityQueue[(String, Double, Long)] = new PriorityQueue[(String, Double, Long)]()(Ordering.by(max_duration))
+            queue.sizeHint(2)
+
+            for (elem <- map) {
+              queue.enqueue((elem._1, elem._2._1, elem._2._2))
+            }
+
+
+            // 判断大小
+            for (elem <- 1 to 2) {
+              if (!queue.isEmpty) {
+                out.collect(queue.dequeue())
+              }
+            }
+          }
+        }
+
+      )
 
     env.execute(this.getClass.getName)
   }
