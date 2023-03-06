@@ -5,9 +5,11 @@ import org.apache.flink.api.common.eventtime.{SerializableTimestampAssigner, Wat
 import org.apache.flink.configuration.Configuration
 import org.apache.flink.streaming.api.CheckpointingMode
 import org.apache.flink.streaming.api.scala._
-import org.apache.flink.streaming.api.scala.function.WindowFunction
+import org.apache.flink.streaming.api.scala.function.{ProcessWindowFunction, WindowFunction}
 import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows
 import org.apache.flink.streaming.api.windowing.time.Time
+import org.apache.flink.streaming.api.windowing.windows.TimeWindow
+import org.apache.flink.util.Collector
 
 import java.time.Duration
 
@@ -45,17 +47,25 @@ object River {
     )
 
     val tag: OutputTag[EventLog] = new OutputTag[EventLog]("late_data")
-    vm.keyBy(_.user_id)
+    val dd: DataStream[String] = vm.keyBy(_.user_id)
       .window(TumblingEventTimeWindows.of(Time.seconds(10)))
       .allowedLateness(Time.seconds(2))
       .sideOutputLateData(tag)
-//      .sum("duration")
+      //      .sum("duration")
       .apply(
-        new WindowFunction[] {}
+        // IN, OUT, KEY, W
+        new WindowFunction[EventLog, String, Long, TimeWindow]() {
+          override def apply(key: Long, window: TimeWindow, input: Iterable[EventLog], out: Collector[String]): Unit = {
+            val size: Int = input.size
+            out.collect("start:" + window.getStart + "," + "end:" + window.getEnd + " count:" + size)
+          }
+        }
       )
 
+    // 延迟的数据
+    val ls: DataStream[EventLog] = dd.getSideOutput(tag)
 
-
+    dd.print("result")
 
     env.execute(this.getClass.getName)
   }
