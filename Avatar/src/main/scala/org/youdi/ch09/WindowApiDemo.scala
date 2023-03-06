@@ -6,14 +6,15 @@ import org.apache.flink.configuration.Configuration
 import org.apache.flink.streaming.api.CheckpointingMode
 import org.apache.flink.streaming.api.scala.{DataStream, StreamExecutionEnvironment}
 import org.apache.flink.streaming.api.scala._
-import org.apache.flink.streaming.api.scala.function.ProcessWindowFunction
+import org.apache.flink.streaming.api.scala.function.{ProcessWindowFunction, WindowFunction}
 import org.apache.flink.streaming.api.windowing.assigners.SlidingEventTimeWindows
 import org.apache.flink.streaming.api.windowing.time.Time
 import org.apache.flink.streaming.api.windowing.windows.TimeWindow
 import org.apache.flink.util.Collector
 
 import java.time.Duration
-import scala.collection.mutable.{PriorityQueue, HashMap}
+import scala.collection.mutable
+import scala.collection.mutable.HashMap
 
 
 object WindowApiDemo {
@@ -122,11 +123,10 @@ object WindowApiDemo {
               map.put(page, (t._1 + elem.duration, t._2 + 1L))
             }
 
-
             def max_duration(x: (String, Double, Long)) = x._2 / x._3.toDouble;
 
             //  函数柯里化
-            val queue: PriorityQueue[(String, Double, Long)] = new PriorityQueue[(String, Double, Long)]()(Ordering.by(max_duration))
+            val queue: mutable.PriorityQueue[(String, Double, Long)] = new mutable.PriorityQueue[(String, Double, Long)]()(Ordering.by(max_duration))
             queue.sizeHint(2)
 
             for (elem <- map) {
@@ -144,6 +144,36 @@ object WindowApiDemo {
         }
 
       )
+
+    // 每隔10s，统计最近 30s 的数据中，每个用户的行为事件中，行为时长最长的前2条记录
+    wm.keyBy(_.page)
+      .window(SlidingEventTimeWindows.of(Time.seconds(30), Time.seconds(10)))
+
+      // 窗口函数
+      .apply(
+        // IN, OUT, KEY, W
+        new WindowFunction[EventLog, (Double, Long), String, TimeWindow]() {
+          override def apply(key: String, window: TimeWindow, input: Iterable[EventLog], out: Collector[(Double, Long)]): Unit = {
+            def maxEvent(e: EventLog): Double = e.duration
+
+            val queue = new mutable.PriorityQueue[EventLog]()(Ordering.by(maxEvent))
+
+            for (elem <- input) {
+              queue.enqueue(elem)
+            }
+
+            // 判断大小
+            for (elem <- 1 to 2) {
+              if (!queue.isEmpty) {
+                val log: EventLog = queue.dequeue()
+                out.collect((log.duration, log.id))
+              }
+            }
+
+          }
+        }
+      )
+
 
     env.execute(this.getClass.getName)
   }
