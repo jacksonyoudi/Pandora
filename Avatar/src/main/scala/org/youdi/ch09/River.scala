@@ -67,6 +67,20 @@ object River {
 
     dd.print("result")
 
+    vm.keyBy(_.user_id)
+      .window(TumblingEventTimeWindows.of(Time.seconds(10)))
+      .allowedLateness(Time.seconds(2))
+      .trigger(new MyEventTimeTrigger)
+      .evictor(new MyTimeEvictor(10))
+      .apply(
+        new WindowFunction[EventLog, String, Long, TimeWindow]() {
+          override def apply(key: Long, window: TimeWindow, input: Iterable[EventLog], out: Collector[String]): Unit = {
+            out.collect("window_start:" + window.getStart + "," + "window_end:" + window.getEnd + "," + input.size)
+          }
+        }
+      )
+
+
     env.execute(this.getClass.getName)
   }
 }
