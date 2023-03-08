@@ -50,6 +50,7 @@ object River {
     val dd: DataStream[String] = vm.keyBy(_.user_id)
       .window(TumblingEventTimeWindows.of(Time.seconds(10)))
       .allowedLateness(Time.seconds(2))
+      // 超过迟到的数据， 输出到侧流
       .sideOutputLateData(tag)
       //      .sum("duration")
       .apply(
@@ -69,6 +70,7 @@ object River {
 
     vm.keyBy(_.user_id)
       .window(TumblingEventTimeWindows.of(Time.seconds(10)))
+      // 允许迟到2s
       .allowedLateness(Time.seconds(2))
       .trigger(new MyEventTimeTrigger)
       .evictor(new MyTimeEvictor(10))
